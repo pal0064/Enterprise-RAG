@@ -47,8 +47,8 @@ function start_service() {
     docker run -d --name ${ENDPOINT_CONTAINER_NAME} \
         --runtime runc \
         -p ${internal_communication_port}:${internal_communication_port} \
-        -p 8091:8091 \
-        -p 8092:8092 \
+        -p 8101:8101 \
+        -p 8102:8102 \
         -e TORCHSERVE_MODEL_NAME=$model \
         -e TORCHSERVE_AMP_DTYPE=BF16 \
         -e TORCHSERVE_BATCH_SIZE=32 \

@@ -9,9 +9,9 @@ services:
     image: tts-torchserve:cpu
     container_name: tts-torchserve-model-server
     ports:
-      - "${TORCHSERVE_PORT}:8090"
-      - "${TORCHSERVE_MGMT_PORT}:8091"
-      - "${TORCHSERVE_METRICS_PORT}:8092"
+      - "${TORCHSERVE_PORT}:8100"
+      - "${TORCHSERVE_MGMT_PORT}:8101"
+      - "${TORCHSERVE_METRICS_PORT}:8102"
     environment:
       HF_TOKEN: ${HF_TOKEN}
       HTTP_PROXY: ${HTTP_PROXY}
@@ -24,6 +24,7 @@ services:
       TORCHSERVE_MAX_WORKERS: ${TORCHSERVE_MAX_WORKERS}
       TORCHSERVE_MIN_WORKERS: ${TORCHSERVE_MIN_WORKERS}
       TORCHSERVE_MODEL_NAME: ${TORCHSERVE_MODEL_NAME}
+      TORCHSERVE_VOCODER_MODEL_NAME: ${TORCHSERVE_VOCODER_MODEL_NAME}
       TORCHSERVE_RESPONSE_TIMEOUT: ${TORCHSERVE_RESPONSE_TIMEOUT}
     runtime: runc
     ipc: host
@@ -35,14 +36,17 @@ services:
     build:
       context: ../../../../../../
       dockerfile: ./comps/tts/impl/microservice/Dockerfile
-      target: ${TTS_CONNECTOR}
+      # target: ${TTS_CONNECTOR}
     container_name: tts-torchserve-microservice
+    ports:
+      - "8200:8200"
     environment:
       NO_PROXY: ${NO_PROXY}
       HTTP_PROXY: ${HTTP_PROXY}
       HTTPS_PROXY: ${HTTPS_PROXY}
-      TTS_CONNECTOR: ${TTS_CONNECTOR}
+      # TTS_CONNECTOR: ${TTS_CONNECTOR}
       TTS_MODEL_NAME: ${TORCHSERVE_MODEL_NAME}
+      TTS_VOCODER_MODEL_NAME: ${TORCHSERVE_VOCODER_MODEL_NAME}
       TTS_MODEL_SERVER: torchserve
       TTS_MODEL_SERVER_ENDPOINT: http://localhost:${TORCHSERVE_PORT}
     ipc: host

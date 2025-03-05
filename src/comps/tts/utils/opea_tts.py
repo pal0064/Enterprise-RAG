@@ -1,4 +1,11 @@
-from comps.tts.utils.connectors import connector_microsoft
+from fastapi import Request, HTTPException
+from fastapi.responses import Response, StreamingResponse
+import soundfile as sf
+import uuid
+from comps import get_opea_logger
+import json
+logger = get_opea_logger(f"{__file__.split('comps/')[1].split('/', 1)[0]}_microservice")
+
 
 class OPEATTS:
     """
@@ -8,23 +15,21 @@ class OPEATTS:
 
     _instance = None
 
-    def __new__(cls, model_name: str, model_server: str, endpoint: str, connector: str):
+    def __new__(cls, model_name: str, model_server: str, endpoint: str):
 
         if cls._instance is None:
             cls._instance = super(OPEATTS, cls).__new__(cls)
-            cls._instance._initialize(model_name, model_server, endpoint, connector)
+            cls._instance._initialize(model_name, model_server, endpoint)
         else:
             if (cls._instance._model_name != model_name or
-                cls._instance._model_server != model_server or
-                cls._instance._connector != connector):
+                cls._instance._model_server != model_server):
                 logger.warning(f"Existing OPEATTS instance has different parameters: "
                               f"{cls._instance._model_name} != {model_name}, "
-                              f"{cls._instance._model_server} != {model_server}, "
-                              f"{cls._instance._connector} != {connector}. "
+                              f"{cls._instance._model_server} != {model_server} "
                               "Proceeding with the existing instance.")
         return cls._instance
 
-    def _initialize(self, model_name: str, model_server: str, endpoint: str, connector: str) -> None:
+    def _initialize(self, model_name: str, model_server: str, endpoint: str) -> None:
         """
         Initializes the OPEATTS instance.
 
@@ -40,109 +45,65 @@ class OPEATTS:
         self._model_name = model_name.split('/')[-1].lower()    # Extract the last part of the model name
         self._model_server = model_server.lower()
         self._endpoint = endpoint
-        self._connector = connector.lower()
         self._APIs = []
 
-        self._api_config = None
-        if self._is_api_based():
-            self._api_config = self._get_api_config()
+    async def tts(self, input_data, voice,response_format):
+        logger.info("reached tts")
+        self._endpoint = self._endpoint.rstrip('/')
+        url = self._endpoint + f"/predictions/{self._model_name.split('/')[-1]}"
+        logger.info(url)
+        try:
+            from huggingface_hub import (
+                    AsyncInferenceClient,
+                )
+            self.async_client = AsyncInferenceClient(
+                    model=f"{url}",
+                )
+        except ImportError as e:
+            error_message =  "Could not import huggingface_hub python package.\n" \
+                             "Please install it with `pip install huggingface_hub`.\n"  \
+                             f"Error: {e}"
+            logger.exception(error_message)
+            raise
+        try:
+            responses = await self.async_client.post(
+                json={"inputs": input_data, "voice": voice}
+            )
+            logger.info(f"Received response: {responses}")
+            speech = json.loads(responses.decode())
+            logger.info(f"Received speech: {speech}")
+            tmp_path = f"tmp_{uuid.uuid4()}.wav"
+            sf.write(tmp_path, speech, samplerate=16000)
 
-        self._SUPPORTED_FRAMEWORKS = {
-            "microsoft": self._import_microsoft
-        }
+            def audio_gen():
+                with open(tmp_path, "rb") as f:
+                    yield from f
 
-        if self._connector not in self._SUPPORTED_FRAMEWORKS:
-            logger.error(f"Unsupported framework: {self._connector}. "
-                          f"Supported frameworks: {list(self._SUPPORTED_FRAMEWORKS.keys())}")
-            raise NotImplementedError(f"Unsupported framework: {self._connector}.")
-        else:
-            self._SUPPORTED_FRAMEWORKS[self._connector]()
+            return StreamingResponse(audio_gen(), media_type=f"audio/{response_format}")
+        except Exception as e:
+            logger.exception(f"Error embedding documents: {e}")
+            raise
 
-    async def run(self, input: Union[TextDoc, TextDocList]) -> Union[EmbedDoc, EmbedDocList]:
+    async def run(self, request_data) -> StreamingResponse:
         """
         Processes the input document using the OPEATTS.
 
         Args:
-            input (Union[TextDoc, TextDocList]): The input document to be processed.
+            input: The input document to be processed.
 
         Returns:
-            Union[EmbedDoc, EmbedDocList]: The processed document.
+            StreamingResponse.
         """
+        logger.info(f"Received request data: {request_data}")
+        print(request_data)
+        if request_data['model'] not in ["microsoft/speecht5_tts"]:
+            raise Exception("TTS model mismatch! Currently only support model: microsoft/speecht5_tts")
+        if request_data['voice'] not in ["default", "male"]:
+            logger.warning("Currently parameter 'voice' can only be default or male!")
 
-        docs = []
-        if isinstance(input, TextDoc):
-            if input.text.strip() == "":
-                raise ValueError("Input text is empty. Provide a valid input text.")
-
-            audio = await self.tts_documents([input.text])
-            if len(audio) == 1 and isinstance(audio[0], list):
-                audio = audio[0]
-            res = EmbedDoc(text=input.text, embedding=audio, metadata=input.metadata)
-            return res # return EmbedDoc
-        else:
-            docs_to_parse = input.docs
-
-            docs_to_parse = [s for s in docs_to_parse if s.text.strip()]
-            if len(docs_to_parse) == 0:
-                raise ValueError("Input text is empty. Provide a valid input text.")
-
-            # Multithreaded executor is needed to enabled batching in the model server
-            async def multithreaded_tts_query(doc):
-                # TODO: Process a batch of documents instead of handling them one by one
-                res_audio = await self.tts_documents([doc.text])
-
-                if len(res_audio) == 1:
-                    # For documents of 1 KB or smaller, TorchServe returns the result audio wrapped in an additional list,
-                    # extract the inner list to ensure compatibility with the next steps
-                    res_audio = res_audio[0]
-
-                return EmbedDoc(text=doc.text, embedding=res_audio, metadata=doc.metadata)
-
-
-            # Create tasks for each document
-            tasks = [multithreaded_tts_query(doc) for doc in docs_to_parse]
-
-            # Run all tasks concurrently
-            docs = await asyncio.gather(*tasks)
-
-            return EmbedDocList(docs=docs) # return EmbedDocList
-
-
-    def _import_microsoft(self) -> None:
         try:
-            self.tts_query = connector_microsoft.MicrosoftTTS(self._model_name, self._model_server, self._endpoint, self._api_config).tts_query
-            self.tts_documents = connector_microsoft.MicrosoftTTS(self._model_name, self._model_server, self._endpoint, self._api_config).tts_documents
-            self.validate_method = connector_microsoft.MicrosoftTTS(self._model_name, self._model_server, self._endpoint, self._api_config)._validate
-        except ModuleNotFoundError:
-            logger.exception("microsoft module not found. Ensure it is installed if you need its functionality.")
-            raise
+            response = await self.tts(request_data['input_data'], request_data['voice'], request_data['format'])
+            return response
         except Exception as e:
-            logger.exception(f"An unexpected error occurred while initializing the connector_microsoft module {e}")
-            raise
-
-    def _get_api_config(self) -> dict:
-        try:
-            api_config_path = os.environ.get("API_CONFIG_PATH", os.path.join(os.getcwd(), "utils", "api_config", "api_config.yaml"))
-            with open(api_config_path, "r") as config:
-                return yaml.safe_load(config)
-        except FileNotFoundError as e:
-            logger.exception(f"API configuration file not found: {e}")
-            raise
-        except yaml.YAMLError as e:
-            logger.exception(f"Error parsing the API configuration file: {e}")
-            raise
-        except Exception as e:
-            logger.exception(f"An unexpected error occurred while loading API configuration: {e}")
-            raise
-
-    def _is_api_based(self) -> bool:
-        """
-        Checks if the model server is API-based.
-
-        Returns:
-            bool: True if the model server is API-based, False otherwise.
-        """
-        if self._model_server in self._APIs:
-            return True
-        else:
-            return False
+            logger.exception(f"Error processing TTS request: {e}")
+            raise HTTPException(status_code=500, detail="Internal Server Error")

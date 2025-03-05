@@ -42,7 +42,7 @@ Expected output:
 Next, you can query the management endpoint to list the models currently loaded in the TorchServe instance:
 
 ```
-curl http://localhost:8091/models
+curl http://localhost:8101/models
 ```
 
 Expected output:
@@ -98,13 +98,13 @@ docker compose --env-file=.env up --build -d
 - Test the `tts-torchserve-model-server` using the following command:
     ```bash
     # check status
-    curl http://localhost:8090/ping
+    curl http://localhost:8100/ping
 
     # list loaded models
-    curl http://localhost:8091/models
+    curl http://localhost:8101/models
 
     # inference; replace speecht5_tts with the desired model identifier from the loaded models
-    curl http://localhost:8090/predictions/speecht5_tts \
+    curl http://localhost:8100/predictions/speecht5_tts \
         -H "Content-Type: text/plain" \
         --data "Hello, world!"
     ```

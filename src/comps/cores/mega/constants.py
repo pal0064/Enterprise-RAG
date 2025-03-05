@@ -35,7 +35,6 @@ class ServiceType(Enum):
     LANGUAGE_DETECTION = 18
     PROMPT_TEMPLATE = 19
 
-
 class MegaServiceEndpoint(Enum):
     """The enum of an MegaService endpoint."""
 
@@ -67,7 +66,6 @@ class MegaServiceEndpoint(Enum):
     DATAPREP = '/v1/dataprep'
     PROMPT_REGISTRY = '/v1/prompt_registry'
     SYSTEM_FINGERPRINT = '/v1/system_fingerprint'
-
     # COMMON
     LIST_SERVICE = "/v1/list_service"
     LIST_PARAMETERS = "/v1/list_parameters"

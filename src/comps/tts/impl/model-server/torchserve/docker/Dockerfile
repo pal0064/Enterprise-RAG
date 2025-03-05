@@ -53,6 +53,15 @@ COPY --chown=user:user model/model-config.yaml /home/user/utils/model-config.yam
 COPY --chown=user:user model/tts_handler.py /home/user/utils/tts_handler.py
 RUN chmod +x /home/user/entrypoint.sh
 
+# Fetch default speaker embedding
+RUN for spk_embed in spk_embed_default.pt spk_embed_male.pt; do \
+    if [ ! -f /home/user/$spk_embed ]; then \
+        curl -o /home/user/$spk_embed https://raw.githubusercontent.com/intel/intel-extension-for-transformers/main/intel_extension_for_transformers/neural_chat/assets/speaker_embeddings/$spk_embed; \
+    fi; \
+done
+
+RUN cp /home/user/spk_embed_default.pt /home/user/utils/spk_embed_default.pt
+RUN cp /home/user/spk_embed_male.pt /home/user/utils/spk_embed_male.pt
 # Cleanup
 RUN pip cache purge && rm -rf /tmp/tmp* && rm -iRf /home/user/.cache
 
