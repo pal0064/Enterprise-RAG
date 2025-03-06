@@ -128,3 +128,13 @@ jobs:
       uses: ./.github/actions/unit-tests
       with:
         test-name: edp_unit_tests
+    - name: TTS unit tests
+      if: success() || failure()
+      uses: ./.github/actions/unit-tests
+      with:
+        test-name: tts_unit_tests
+    - name: ASR unit tests
+    if: success() || failure()
+    uses: ./.github/actions/unit-tests
+    with:
+      test-name: asr_unit_tests
