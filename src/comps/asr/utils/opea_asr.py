@@ -33,7 +33,7 @@ class OPEAASR:
         """
         Initializes the OPEAASR instance.
 
-        Args:
+        Args :
             model_name (str): The full name of the model, which may include the repository ID (e.g., 'openai/whisper-small'). 
                       Internally, only the short name (the last part after the final '/') will be used. For instance, 
                       'whisper-small' will be extracted from 'whisper-small'.
