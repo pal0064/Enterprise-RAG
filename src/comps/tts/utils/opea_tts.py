@@ -1,9 +1,11 @@
 from fastapi import Request, HTTPException
 from fastapi.responses import Response, StreamingResponse
 import soundfile as sf
-import uuid
+import io
 from comps import get_opea_logger
 import json
+from huggingface_hub import AsyncInferenceClient  # Ensure this import statement is present
+
 logger = get_opea_logger(f"{__file__.split('comps/')[1].split('/', 1)[0]}_microservice")
 
 
@@ -47,15 +49,11 @@ class OPEATTS:
         self._endpoint = endpoint
         self._APIs = []
 
-    async def tts(self, input_data, voice,response_format):
+    async def tts(self, input_data, voice, response_format):
         logger.info("reached tts")
         self._endpoint = self._endpoint.rstrip('/')
         url = self._endpoint + f"/predictions/{self._model_name.split('/')[-1]}"
-        logger.info(url)
         try:
-            from huggingface_hub import (
-                    AsyncInferenceClient,
-                )
             self.async_client = AsyncInferenceClient(
                     model=f"{url}",
                 )
@@ -64,21 +62,17 @@ class OPEATTS:
                              "Please install it with `pip install huggingface_hub`.\n"  \
                              f"Error: {e}"
             logger.exception(error_message)
-            raise
+            raise Exception(error_message)
         try:
             responses = await self.async_client.post(
                 json={"inputs": input_data, "voice": voice}
             )
-            logger.info(f"Received response: {responses}")
             speech = json.loads(responses.decode())
-            logger.info(f"Received speech: {speech}")
-            tmp_path = f"tmp_{uuid.uuid4()}.wav"
-            sf.write(tmp_path, speech, samplerate=16000)
-
+            audio_buffer = io.BytesIO()
+            sf.write(audio_buffer, speech, samplerate=16000, format=response_format)
+            audio_buffer.seek(0)
             def audio_gen():
-                with open(tmp_path, "rb") as f:
-                    yield from f
-
+                yield from audio_buffer
             return StreamingResponse(audio_gen(), media_type=f"audio/{response_format}")
         except Exception as e:
             logger.exception(f"Error embedding documents: {e}")
@@ -95,12 +89,10 @@ class OPEATTS:
             StreamingResponse.
         """
         logger.info(f"Received request data: {request_data}")
-        print(request_data)
         if request_data['model'] not in ["microsoft/speecht5_tts"]:
             raise Exception("TTS model mismatch! Currently only support model: microsoft/speecht5_tts")
         if request_data['voice'] not in ["default", "male"]:
-            logger.warning("Currently parameter 'voice' can only be default or male!")
-
+            raise Exception("Currently parameter 'voice' can only be default or male!")
         try:
             response = await self.tts(request_data['input_data'], request_data['voice'], request_data['format'])
             return response
