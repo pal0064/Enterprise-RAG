@@ -84,3 +84,20 @@ spec:
             endpoint: /v1/chat/completions
             LLM_MODEL_SERVER: vllm
             LLM_MODEL_SERVER_ENDPOINT: vllm-service-m
+      - name: Tts
+        data: $response
+        internalService:
+          serviceName: tts-svc
+          config:
+            endpoint: /v1/tts
+            TTS_MODEL_SERVER_ENDPOINT: torchserve-tts-svc
+            TTS_MODEL_NAME: "microsoft/speecht5_tts"
+            TTS_MODEL_SERVER: "torchserve"
+            TTS_VOCODER_MODEL_NAME: "microsoft/speecht5_hifigan"
+      - name: TorchserveTTS
+        internalService:
+          serviceName: torchserve-tts-svc
+          config:
+            TORCHSERVE_MODEL_NAME: "microsoft/speecht5_tts"
+            TORCHSERVE_VOCODER_MODEL_NAME: "microsoft/speecht5_hifigan"
+          isDownstreamService: true

@@ -73,6 +73,8 @@ const (
 	DefaultRouterServiceName = "router-service"
 	ASR                      = "Asr"
 	TTS                      = "Tts"
+	TorchserveTTS      		 = "TorchserveTTS"
+	TorchserveTTSGaudi 		 = "TorchserveTTSGaudi"
 	SpeechT5                 = "SpeechT5"
 	SpeechT5Gaudi            = "SpeechT5Gaudi"
 	Whisper                  = "Whisper"
@@ -106,6 +108,7 @@ var yamlDict = map[string]string{
 	WebRetriever:        yaml_dir + "web-retriever.yaml",
 	ASR:                 yaml_dir + "asr.yaml",
 	TTS:                 yaml_dir + "tts.yaml",
+	TorchserveTTS: 		 yaml_dir + "torchserve-tts.yaml",
 	SpeechT5:            yaml_dir + "speecht5.yaml",
 	SpeechT5Gaudi:       yaml_dir + "speecht5_gaudi.yaml",
 	Whisper:             yaml_dir + "whisper.yaml",

@@ -61,6 +61,8 @@ var (
 		"VLLM",
 		"VLLMOpenVino",
 		"LanguageDetection",
+		"TorchserveTTS",
+		"TorchserveTTSGaudi"
 	}
 )
 

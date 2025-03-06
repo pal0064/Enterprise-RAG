@@ -1,6 +1,15 @@
 # recourse-cpu.yaml is a file that contains the resource requests and limits for each microservice in the microservices-connector deployment.
 
 services:
+  dataprep-usvc:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 8
+        memory: 16Gi
+      limits:
+        cpu: 8
+        memory: 16Gi
   embedding-usvc:
     replicas: 1
     resources:
@@ -19,6 +28,15 @@ services:
       limits:
         memory: 1Gi
         cpu: 0.5
+  ingestion-usvc:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 1
+        memory: 2Gi
+      limits:
+        cpu: 4
+        memory: 2Gi
   in-guard-usvc:
     replicas: 1
     resources:
@@ -129,3 +147,12 @@ services:
     resources:
       limits:
         habana.ai/gaudi: 8
+  torchserve-tts:
+    replicas: 4
+    resources:
+      requests:
+        cpu: 4
+        memory: 4Gi
+      limits:
+        cpu: 4
+        memory: 16Gi
