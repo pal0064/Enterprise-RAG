@@ -130,7 +130,7 @@ spec:
             # ASR_VOCODER_MODEL_NAME: "microsoft/speecht5_hifigan"
       - name: TorchserveASR
         internalService:
-          serviceName: torchserve-tts-svc
+          serviceName: torchserve-asr-svc
           config:
             TORCHSERVE_MODEL_NAME: "openai/whisper-small"
             # TORCHSERVE_VOCODER_MODEL_NAME: "microsoft/speecht5_hifigan"
