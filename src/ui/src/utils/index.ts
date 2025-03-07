@@ -65,6 +65,8 @@ const parseServiceDetailsResponseData = (
     llm: "llm",
     vllm: "vllm",
     tgi: "tgi",
+    tts: "tts",
+    torchservetts: "tts_model_server",
   };
 
   let usedVectorDb = "";
