@@ -72,6 +72,8 @@ const (
 	METADATA_PLATFORM        = "gmc/platform"
 	DefaultRouterServiceName = "router-service"
 	ASR                      = "Asr"
+	TorchserveASR      		 = "TorchserveASR"
+	TorchserveASRGaudi 		 = "TorchservASRGaudi"
 	TTS                      = "Tts"
 	TorchserveTTS      		 = "TorchserveTTS"
 	TorchserveTTSGaudi 		 = "TorchserveTTSGaudi"
@@ -107,6 +109,7 @@ var yamlDict = map[string]string{
 	Router:              yaml_dir + "gmc-router.yaml",
 	WebRetriever:        yaml_dir + "web-retriever.yaml",
 	ASR:                 yaml_dir + "asr.yaml",
+	TorchserveASR: 		 yaml_dir + "torchserve-asr.yaml",
 	TTS:                 yaml_dir + "tts.yaml",
 	TorchserveTTS: 		 yaml_dir + "torchserve-tts.yaml",
 	SpeechT5:            yaml_dir + "speecht5.yaml",

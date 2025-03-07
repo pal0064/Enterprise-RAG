@@ -6,7 +6,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: torchserve-tts-config
+  name: torchserve-asr-config
   labels:
     {{- include "manifest.labels" (list .filename .) | nindent 4 }}
 data:
@@ -22,18 +22,18 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: torchserve-tts
+  name: torchserve-asr
   labels:
     {{- include "manifest.labels" (list .filename .) | nindent 4 }}
 spec:
   type: ClusterIP
   ports:
-    - port: 8100
-      targetPort: 8100
+    - port: 8300
+      targetPort: 8300
       protocol: TCP
-      name: torchserve-tts
-    - port: 8102
-      targetPort: 8102
+      name: torchserve-asr
+    - port: 8302
+      targetPort: 8302
       protocol: TCP
       name: metrics
   selector:
@@ -46,7 +46,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: torchserve-tts
+  name: torchserve-asr
   labels:
     {{- include "manifest.labels" (list .filename .) | nindent 4 }}
 spec:
@@ -65,10 +65,10 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       {{- include "gmc.imagePullSecrets" . }}
       containers:
-        - name: torchserve-tts
+        - name: torchserve-asr
           envFrom:
             - configMapRef:
-                name: torchserve-tts-config
+                name: torchserve-asr-config
             - configMapRef:
                 name: extra-env-config
                 optional: true
@@ -99,15 +99,15 @@ spec:
             - mountPath: /tmp
               name: tmp
             - mountPath: /home/user/tmp
-              name: torchserve-tts-tmp
+              name: torchserve-asr-tmp
             - mountPath: /home/user/logs
-              name: torchserve-tts-logs
+              name: torchserve-asr-logs
           ports:
             - name: http
-              containerPort: 8100
+              containerPort: 8300
               protocol: TCP
             - name: metrics
-              containerPort: 8102
+              containerPort: 8302
               protocol: TCP
           livenessProbe:
             failureThreshold: 24
@@ -132,14 +132,14 @@ spec:
       volumes:
         - name: model-volume
           persistentVolumeClaim:
-            claimName: model-volume-tts
+            claimName: model-volume-asr
         - name: shm
           emptyDir:
             medium: Memory
             sizeLimit: 1Gi
         - name: tmp
           emptyDir: {}
-        - name: torchserve-tts-tmp
+        - name: torchserve-asr-tmp
           emptyDir: {}
-        - name: torchserve-tts-logs
+        - name: torchserve-asr-logs
           emptyDir: {}

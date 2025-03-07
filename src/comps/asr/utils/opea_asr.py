@@ -5,9 +5,10 @@
 
 from fastapi import Request, HTTPException
 from fastapi.responses import Response, StreamingResponse
-import uuid
 from comps import get_opea_logger
-import json
+from huggingface_hub import (
+                    AsyncInferenceClient,
+                )
 logger = get_opea_logger(f"{__file__.split('comps/')[1].split('/', 1)[0]}_microservice")
 
 
@@ -52,9 +53,7 @@ class OPEAASR:
         url = self._endpoint + f"/predictions/{self._model_name.split('/')[-1]}"
         logger.info(url)
         try:
-            from huggingface_hub import (
-                    AsyncInferenceClient,
-                )
+            
             self.async_client = AsyncInferenceClient(
                     model=f"{url}",
                 )

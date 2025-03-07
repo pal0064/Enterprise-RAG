@@ -24,6 +24,8 @@ LLM_SERVICE_HOST_IP = os.getenv("LLM_SERVICE_HOST_IP", "0.0.0.0")
 LLM_SERVICE_PORT = os.getenv("LLM_SERVICE_PORT", 9000)
 TTS_SERVICE_HOST_IP = os.getenv("TTS_SERVICE_HOST_IP", "0.0.0.0")
 TTS_SERVICE_PORT = os.getenv("TTS_SERVICE_PORT", 8200)
+ASR_SERVICE_HOST_IP = os.getenv("ASR_SERVICE_HOST_IP", "0.0.0.0")
+ASR_SERVICE_PORT = os.getenv("ASR_SERVICE_PORT", 8400)
 
 
 class ChatQnAService:
@@ -80,9 +82,17 @@ class ChatQnAService:
             port=TTS_SERVICE_PORT,
             endpoint="/v1/tts",
             use_remote_service=True,
-            service_type=ServiceType.EMBEDDING,
+            service_type=ServiceType.TTS,
         )
-        self.megaservice.add(embedding).add(retriever).add(rerank).add(prompt_template).add(llm)
+        asr = MicroService(
+            name="asr",
+            host=ASR_SERVICE_HOST_IP,
+            port=ASR_SERVICE_PORT,
+            endpoint="/v1/asr",
+            use_remote_service=True,
+            service_type=ServiceType.ASR,
+        )
+        self.megaservice.add(asr).add(embedding).add(retriever).add(rerank).add(prompt_template).add(llm)
         self.megaservice.flow_to(embedding, retriever)
         self.megaservice.flow_to(retriever, rerank)
         self.megaservice.flow_to(rerank, prompt_template)

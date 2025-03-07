@@ -125,3 +125,21 @@ spec:
             TORCHSERVE_MODEL_NAME: "microsoft/speecht5_tts"
             TORCHSERVE_VOCODER_MODEL_NAME: "microsoft/speecht5_hifigan"
           isDownstreamService: true
+      - name: Asr
+        data: $response
+        dependency: Hard
+        internalService:
+          serviceName: asr-svc
+          config:
+            endpoint: /v1/asr
+            ASR_MODEL_SERVER_ENDPOINT: torchserve-asr-svc
+            ASR_MODEL_NAME: "openai/whisper-small"
+            ASR_MODEL_SERVER: "torchserve"
+            # ASR_VOCODER_MODEL_NAME: "microsoft/speecht5_hifigan"
+      - name: TorchserveASR
+        internalService:
+          serviceName: torchserve-tts-svc
+          config:
+            TORCHSERVE_MODEL_NAME: "openai/whisper-small"
+            # TORCHSERVE_VOCODER_MODEL_NAME: "microsoft/speecht5_hifigan"
+          isDownstreamService: true

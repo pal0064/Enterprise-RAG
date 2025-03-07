@@ -6,9 +6,9 @@ services:
     image: asr-torchserve:cpu
     container_name: asr-torchserve-model-server
     ports:
-      - "${TORCHSERVE_PORT}:8090"
-      - "${TORCHSERVE_MGMT_PORT}:8091"
-      - "${TORCHSERVE_METRICS_PORT}:8092"
+      - "${TORCHSERVE_PORT}:8300"
+      - "${TORCHSERVE_MGMT_PORT}:8301"
+      - "${TORCHSERVE_METRICS_PORT}:8302"
     environment:
       HF_TOKEN: ${HF_TOKEN}
       HTTP_PROXY: ${HTTP_PROXY}

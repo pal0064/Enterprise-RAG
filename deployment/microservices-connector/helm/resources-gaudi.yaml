@@ -147,3 +147,21 @@ services:
       limits:
         cpu: 4
         memory: 16Gi
+  asr-usvc:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 1
+        memory: 2Gi
+      limits:
+        cpu: 4
+        memory: 4Gi
+  torchserve-asr:
+    replicas: 4
+    resources:
+      requests:
+        cpu: 4
+        memory: 4Gi
+      limits:
+        cpu: 4
+        memory: 16Gi

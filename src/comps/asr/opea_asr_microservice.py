@@ -51,7 +51,7 @@ opea_asr = OPEAASR(
     service_type=ServiceType.ASR,
     endpoint=str(MegaServiceEndpoint.ASR),
     host="0.0.0.0",
-    port=int(os.getenv('ASR_USVC_PORT', default=8300)),
+    port=int(os.getenv('ASR_USVC_PORT', default=8400)),
     input_datatype=Request,
     output_datatype=Response
 )
